@@ -7,6 +7,8 @@ uLCD_4DGL uLCD(D1, D0, D2);
 InterruptIn button_up_count(D5);
 InterruptIn button_down_count(D6);
 InterruptIn button_confirm(D9);
+AnalogOut aout(PA_4); // D7
+AnalogIn ain(A0);
 
 Timer debounce;
 Thread thread_uLCD(osPriorityNormal);
@@ -46,8 +48,31 @@ void Down_count(){
     }
 }
 
-void Output_wave(){
+void Output_wave(int freq){
+    while(IsConfirm){
+        int flag = 1;
+        for (float i = 0.0000f;i >= 0.0000f;) {
+            aout = i;
+            if(i>0.91f)
+                flag = 0;
+            if(flag)
+                i +=0.607f;
+            else 
+                i -=0.910f;
+            printf("%1.2f\r\n", aout.read() * 3.3f);
+            wait_us(1000000/freq);
+            //ThisThread::sleep_for(1000/freq);
+        }
+    }
+}
 
+void Test_Output_wave(){
+    aout = 0;
+    // printf("%1.2f\r\n", aout.read());
+    aout = 1;
+    // printf("%1.2f\r\n", aout.read());
+    //ThisThread::sleep_for(1);
+    wait_us(71);
 }
 
 void Confirm(){
@@ -55,6 +80,7 @@ void Confirm(){
         IsConfirm = !IsConfirm;
         queue_uLCD.call(Display_to_uLCD);
         debounce.reset();
+        Output_wave(test_number[i]);
     }    
 }
 
@@ -74,33 +100,3 @@ int main()
     button_up_count.rise(queue_uLCD.event(Up_count));
     button_down_count.rise(queue_uLCD.event(Down_count));
 }
-
-// #include "mbed.h"
-// #include "uLCD_4DGL.h"
-
-// //InterruptIn down(D7);
-// //InterruptIn select(D8);
-// InterruptIn up(D9);
-// uLCD_4DGL uLCD(D1, D0, D2);
-// EventQueue queue(32 * EVENTS_EVENT_SIZE);
-// Thread t;
-
-// int i;
-
-// void add()
-// {   
-//     i=i+1;
-//     uLCD.printf("%d",i);
-// }
-
-// int main() 
-// {   
-//     i=3;
-//     uLCD.text_width(4); //4X size text
-//     uLCD.text_height(4);
-//     uLCD.color(RED);
-//     uLCD.printf("%d",i);
-//     t.start(callback(&queue, &EventQueue::dispatch_forever));
-//     up.rise(queue.event(add));      
-//     //down.rise(&minus); 
-// }
